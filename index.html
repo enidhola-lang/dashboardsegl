@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Learning Hub Puebla - Dashboard de Analítica</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f6fe',
+              100: '#e0edfe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              800: '#1e3a8a',
+              900: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-blue-500 selection:text-white">
+
+  <!-- TOP HEADER -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center text-white">
+          <i class="fa-solid font-bold text-xl fa-globe"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight text-white">Global Learning Hub</h1>
+            <span class="bg-blue-500/20 text-blue-300 text-xs px-2.5 py-0.5 rounded-full border border-blue-400/30 font-medium">Puebla, MX</span>
+          </div>
+          <p class="text-xs text-slate-400">Social Media Analytics & Community Management • Curso Checo A1/A2</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <button onclick="resetFilters()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg transition-colors border border-slate-700 flex items-center gap-2">
+          <i class="fa-solid fa-rotate-left"></i> Restablecer Filtros
+        </button>
+        <button onclick="exportCSV()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg font-medium shadow-sm transition-colors flex items-center gap-2">
+          <i class="fa-solid fa-download"></i> Exportar Datos
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-grow w-full">
+
+    <!-- KPI SUMMARY CARDS -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <!-- Card 1 -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Comentarios</span>
+          <span class="p-2 bg-blue-50 text-blue-600 rounded-lg text-xs"><i class="fa-solid fa-comments"></i></span>
+        </div>
+        <div class="mt-2">
+          <div id="kpi-total" class="text-2xl font-bold text-slate-900">175</div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Campañas Oct 1 - Oct 15, 2026</p>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Sentimiento Positivo</span>
+          <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg text-xs"><i class="fa-solid fa-face-smile"></i></span>
+        </div>
+        <div class="mt-2">
+          <div id="kpi-positivo" class="text-2xl font-bold text-emerald-600">0 (0%)</div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Satisfacción y elogios</p>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Neutros / Dudas</span>
+          <span class="p-2 bg-slate-100 text-slate-600 rounded-lg text-xs"><i class="fa-solid fa-circle-question"></i></span>
+        </div>
+        <div class="mt-2">
+          <div id="kpi-neutro" class="text-2xl font-bold text-slate-700">0 (0%)</div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Informes y precios</p>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Alertas Críticas (Rojo)</span>
+          <span class="p-2 bg-red-50 text-red-600 rounded-lg text-xs"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        </div>
+        <div class="mt-2">
+          <div id="kpi-rojo" class="text-2xl font-bold text-red-600">0</div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Atención urgente requerida</p>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Promedio CSAT</span>
+          <span class="p-2 bg-amber-50 text-amber-600 rounded-lg text-xs"><i class="fa-solid fa-star"></i></span>
+        </div>
+        <div class="mt-2">
+          <div id="kpi-csat" class="text-2xl font-bold text-slate-900">0.0 / 5.0</div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Puntuación de experiencia</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTROL PANEL & FILTERS -->
+    <section class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+      <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+        <!-- Search Input -->
+        <div class="relative flex-grow">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input type="text" id="searchInput" placeholder="Buscar por comentario, usuario o ubicación..." 
+                 class="w-full pl-10 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+
+        <!-- Filter Selects -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <!-- Sentimiento -->
+          <select id="filterSentiment" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <option value="ALL">Todo Sentimiento</option>
+            <option value="Positivo">Positivo</option>
+            <option value="Consulta">Consulta / Neutral</option>
+            <option value="Negativo">Negativo (Queja)</option>
+          </select>
+
+          <!-- Banderas -->
+          <select id="filterFlag" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <option value="ALL">Todas las Banderas</option>
+            <option value="Rojo">🔴 Roja (Alta)</option>
+            <option value="Naranja">🟠 Naranja (Media)</option>
+            <option value="Amarillo">🟡 Amarilla (Baja)</option>
+            <option value="Ninguna">⚪ Ninguna</option>
+          </select>
+
+          <!-- Dispositivo -->
+          <select id="filterDevice" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <option value="ALL">Todos los Dispositivos</option>
+            <option value="iOS">iOS (iPhone)</option>
+            <option value="Android">Android</option>
+            <option value="Web / Desktop">Web / Desktop</option>
+            <option value="iPad / Tablet">iPad / Tablet</option>
+          </select>
+
+          <!-- Módulo -->
+          <select id="filterModule" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <option value="ALL">Todos los Módulos</option>
+            <!-- Generated dynamically -->
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION A & D: CHARTS ROW -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Sentiment Chart -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-blue-600"></i> Distribución de Sentimiento
+          </h2>
+        </div>
+        <div class="flex-grow flex items-center justify-center relative min-h-[200px]">
+          <canvas id="sentimentChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Device Origin Breakdown -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-mobile-screen text-blue-600"></i> Origen por Dispositivo
+          </h2>
+        </div>
+        <div class="flex-grow flex items-center justify-center relative min-h-[200px]">
+          <canvas id="deviceChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Module CSAT & Issue Distribution -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-cubes text-blue-600"></i> Calificación por Módulo
+          </h2>
+        </div>
+        <div class="flex-grow flex items-center justify-center relative min-h-[200px]">
+          <canvas id="moduleChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECTION B: FLAG SYSTEM (NEGATIVES AT GLANCE) & TOP 10 LIKED -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- SISTEMA DE BANDERAS (QUEJAS Y NEGATIVOS) - 7 COLS -->
+      <div class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-flag text-red-500"></i> Sistema de Banderas de Atención (Quejas)
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Clasificación de prioridad según impacto técnico o satisfacción</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-medium bg-red-100 text-red-800 px-2 py-0.5 rounded-full">🔴 Alta</span>
+            <span class="text-[11px] font-medium bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">🟠 Media</span>
+            <span class="text-[11px] font-medium bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">🟡 Baja</span>
+          </div>
+        </div>
+
+        <div class="overflow-y-auto max-h-[380px] custom-scrollbar space-y-3 pr-1" id="flagListContainer">
+          <!-- Flag items inserted dynamically -->
+        </div>
+      </div>
+
+      <!-- TOP 10 MÁS LIKED - 5 COLS -->
+      <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-heart text-rose-500"></i> Top 10 Más Reaccionados
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Comentarios con mayor volumen de Likes</p>
+          </div>
+        </div>
+
+        <div class="overflow-y-auto max-h-[380px] custom-scrollbar space-y-3 pr-1" id="topLikedContainer">
+          <!-- Top liked inserted dynamically -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECTION E: DETAILED DATA TABLE -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-slate-600"></i> Registro Completo de Comentarios
+          </h2>
+          <p class="text-xs text-slate-500">Mostrando comentarios según los filtros seleccionados</p>
+        </div>
+        <div class="text-xs text-slate-500 font-medium">
+          Registros encontrados: <span id="recordCount" class="text-blue-600 font-bold">0</span> / 175
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 uppercase font-semibold text-[10px] tracking-wider">
+              <th class="py-3 px-4">ID / Fecha</th>
+              <th class="py-3 px-4">Usuario</th>
+              <th class="py-3 px-4">Comentario</th>
+              <th class="py-3 px-4 text-center">Sentimiento / Prioridad</th>
+              <th class="py-3 px-4 text-center">Dispositivo</th>
+              <th class="py-3 px-4 text-center">Interacciones</th>
+              <th class="py-3 px-4 text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700">
+            <!-- Table rows populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
+        <div id="paginationInfo">Mostrando 1 a 10</div>
+        <div class="flex items-center gap-1" id="paginationControls">
+          <!-- Controls generated dynamically -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL FOR DETAIL INSPECTION -->
+  <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in duration-200">
+      <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 transition-colors">
+        <i class="fa-solid fa-xmark text-base"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+          <i class="fa-solid fa-comment-dots text-xl"></i>
+        </div>
+        <div>
+          <span id="modalId" class="text-xs font-mono text-slate-400 font-medium">GLHP-IG-0000</span>
+          <h3 id="modalUser" class="text-base font-bold text-slate-900">@usuario</h3>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/60">
+          <p id="modalComment" class="text-sm text-slate-800 leading-relaxed italic">"..."</p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+          <div class="bg-slate-100/70 p-2.5 rounded-lg">
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Marca de Tiempo</span>
+            <span id="modalDate" class="font-medium text-slate-700">--</span>
+          </div>
+
+          <div class="bg-slate-100/70 p-2.5 rounded-lg">
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Sentimiento</span>
+            <span id="modalSentiment" class="font-medium">--</span>
+          </div>
+
+          <div class="bg-slate-100/70 p-2.5 rounded-lg">
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Prioridad Banderas</span>
+            <span id="modalFlag" class="font-medium">--</span>
+          </div>
+
+          <div class="bg-slate-100/70 p-2.5 rounded-lg">
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Dispositivo</span>
+            <span id="modalDevice" class="font-medium text-slate-700">--</span>
+          </div>
+
+          <div class="bg-slate-100/70 p-2.5 rounded-lg">
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Likes / Respuestas</span>
+            <span id="modalMetrics" class="font-medium text-slate-700">--</span>
+          </div>
+
+          <div class="bg-slate-100/70 p-2.5 rounded-lg">
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Puntuación CSAT</span>
+            <span id="modalCSAT" class="font-medium text-slate-700">--</span>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 pt-3 flex items-center justify-between text-xs text-slate-500">
+          <div>Módulo: <span id="modalModule" class="font-semibold text-slate-700">--</span></div>
+          <div>Ubicación: <span id="modalLocation" class="font-semibold text-slate-700">--</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    <p>© 2026 <strong>Global Learning Hub Puebla</strong> • Sistema de Evaluación e Integración de Software Educativo</p>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // DATASET GENERATION (175 SIMULATED RECORDS)
+    const modules = [
+      "Módulo 1: Introducción y Pronunciación",
+      "Módulo 2: Gramática Interactiva",
+      "Módulo 3: Casos y Vocabulario Práctico",
+      "Módulo 4: Simulación de Producción Oral",
+      "Módulo 5: Checo Corporativo y Negocios",
+      "Software Interactivo General"
+    ];
+
+    const locations = ["Puebla, Pue.", "Cholula, Pue.", "CDMX", "Monterrey, NL", "Guadalajara, Jal.", "Querétaro, Qro.", "Veracruz, Ver."];
+    const devicesList = ["iOS", "Android", "Web / Desktop", "iPad / Tablet"];
+
+    // Base mock texts for variations
+    const positiveTemplates = [
+      "¡Increíble la metodología de Global Learning Hub Puebla! En solo 3 semanas ya puedo presentarme en checo.",
+      "El enfoque en output de Global Learning Hub es genial, me ayuda muchísimo a perder el miedo a hablar.",
+      "Excelente curso de checo A1. La simulación interactiva hace que la gramática sea fácil de digerir.",
+      "Me fascina que en Global Learning Hub no perdemos tiempo en teoría aburrida, todo es práctico.",
+      "¡Cinco estrellas para los ejercicios orales del software educativo de Global Learning Hub Puebla!",
+      "Definitivamente la mejor opción corporativa en Puebla para aprender checo a nuestro propio ritmo.",
+      "Me impresiona lo intuitivo que es el software. La producción oral es constante en cada lección.",
+      "El soporte docente en Global Learning Hub Puebla resuelve rápido y las simulaciones son hiperrealistas.",
+      "Gran inversión para nuestro equipo de negocios que viaja a Praga. ¡100% recomendado!",
+      "Superó mis expectativas. Nunca pensé hablar frases completas en checo tan pronto."
+    ];
+
+    const neutralTemplates = [
+      "Hola Global Learning Hub Puebla, ¿tienen opciones de pago en parcialidades para empresas?",
+      "¿Tienen disponibles horarios de atención en la sede de Puebla de Zaragoza o es 100% en línea?",
+      "Una consulta, ¿el diploma del curso de checo A1/A2 tiene validez oficial ante la SEP?",
+      "¿El software interactivo requiere instalar alguna aplicación adicional en iPad o PC?",
+      "Buenas tardes, ¿cuándo inicia el siguiente grupo corporativo de checo intensivo en Puebla?",
+      "¿Hay algún descuento especial si inscrivo a 5 colaboradores de mi empresa?",
+      "Me gustaría conocer más sobre el plan de estudios del Módulo de Checo para Negocios.",
+      "¿Podrían enviarme el temario completo en PDF a mi correo por favor?"
+    ];
+
+    const negativeTemplates = [
+      { text: "El software interactivo se congela cada vez que intento enviar la grabación en el módulo 4.", flag: "Rojo", csat: 1 },
+      { text: "¡Pésimo servicio técnico! Llevo 24 horas esperando que restablezcan mi acceso a la plataforma.", flag: "Rojo", csat: 1 },
+      { text: "Hubo un doble cargo en mi tarjeta de crédito al inscribirme al curso de checo. Requiero reembolso.", flag: "Rojo", csat: 1 },
+      { text: "El sistema de reconocimiento de voz de Global Learning Hub no detecta correctamente el micrófono en Android.", flag: "Naranja", csat: 2 },
+      { text: "La interfaz gráfica del software interactivo es un poco confusa en pantallas pequeñas de celular.", flag: "Naranja", csat: 2 },
+      { text: "Los ejercicios del Módulo 2 son demasiado rápidos y faltan más explicaciones gramaticales escritas.", flag: "Amarillo", csat: 3 },
+      { text: "El audio de las lecciones de checo a veces se escucha muy bajo en la versión web.", flag: "Amarillo", csat: 3 },
+      { text: "Siento que la velocidad del ritmo de pronunciación en las simulaciones es algo acelerada para A1.", flag: "Amarillo", csat: 3 }
+    ];
+
+    const userPrefixes = ["marianita", "carlos_rh", "alberto_pue", "dani_tech", "fer_puebla", "lucia_mx", "juan_corp", "sofia_mkt", "pedro_pue", "andrea_checo", "puebla_exec", "roberto_g", "valeria_l"];
+
+    // Generate 175 simulated items
+    let dataset = [];
+
+    function generateDataset() {
+      dataset = [];
+      let currentId = 1;
+
+      for (let i = 0; i < 175; i++) {
+        const idStr = `GLHP-IG-${String(currentId).padStart(4, '0')}`;
+        currentId++;
+
+        // Random Day between 1 and 15 Oct 2026
+        const day = Math.floor(Math.random() * 15) + 1;
+        const dayStr = String(day).padStart(2, '0');
+
+        // Random hour outside 01:00 to 07:29
+        let hour;
+        if (Math.random() > 0.2) {
+          // Daytime / Evening (08:00 to 23:59)
+          hour = Math.floor(Math.random() * 16) + 8;
+        } else {
+          // Early morning (00:00 to 00:59 or 07:30 to 07:59)
+          hour = Math.random() > 0.5 ? 0 : 7;
+        }
+        const min = Math.floor(Math.random() * 60);
+        const sec = Math.floor(Math.random() * 60);
+        const timestamp = `2026-10-${dayStr} ${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+
+        // Weighted Sentiment Distribution: ~48% Pos, 32% Neu, 20% Neg
+        const randSent = Math.random();
+        let sentiment, commentText, flag = "Ninguna", csat, likes, replies;
+
+        if (randSent < 0.48) {
+          sentiment = "Positivo";
+          commentText = positiveTemplates[Math.floor(Math.random() * positiveTemplates.length)];
+          csat = Math.random() > 0.3 ? 5 : 4;
+          likes = Math.floor(Math.random() * 45) + 2;
+          replies = Math.floor(Math.random() * 5);
+        } else if (randSent < 0.80) {
+          sentiment = "Consulta";
+          commentText = neutralTemplates[Math.floor(Math.random() * neutralTemplates.length)];
+          csat = Math.floor(Math.random() * 2) + 4; // 4 or 5
+          likes = Math.floor(Math.random() * 12);
+          replies = Math.floor(Math.random() * 3) + 1;
+        } else {
+          sentiment = "Negativo";
+          const negItem = negativeTemplates[Math.floor(Math.random() * negativeTemplates.length)];
+          commentText = negItem.text;
+          flag = negItem.flag;
+          csat = negItem.csat;
+          likes = Math.floor(Math.random() * 8);
+          replies = Math.floor(Math.random() * 6) + 1;
+        }
+
+        // Device distribution: iOS 45%, Android 38%, Web 12%, iPad 5%
+        const randDev = Math.random();
+        let device = "iOS";
+        if (randDev < 0.45) device = "iOS";
+        else if (randDev < 0.83) device = "Android";
+        else if (randDev < 0.95) device = "Web / Desktop";
+        else device = "iPad / Tablet";
+
+        const username = `@${userPrefixes[Math.floor(Math.random() * userPrefixes.length)]}_${Math.floor(Math.random() * 90 + 10)}`;
+        const moduleAssigned = modules[Math.floor(Math.random() * modules.length)];
+        const loc = locations[Math.floor(Math.random() * locations.length)];
+
+        dataset.push({
+          id: idStr,
+          timestamp: timestamp,
+          user: username,
+          comment: commentText,
+          sentiment: sentiment,
+          flag: flag,
+          csat: csat,
+          likes: likes,
+          replies: replies,
+          device: device,
+          module: moduleAssigned,
+          location: loc
+        });
+      }
+    }
+
+    // STATE & FILTERS
+    let currentPage = 1;
+    const pageSize = 10;
+    let filteredData = [];
+
+    // Chart instances
+    let sentimentChartInstance = null;
+    let deviceChartInstance = null;
+    let moduleChartInstance = null;
+
+    // INIT
+    window.onload = function() {
+      generateDataset();
+      populateModuleFilter();
+      setupEventListeners();
+      applyFilters();
+    };
+
+    function populateModuleFilter() {
+      const select = document.getElementById("filterModule");
+      modules.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        select.appendChild(opt);
+      });
+    }
+
+    function setupEventListeners() {
+      document.getElementById("searchInput").addEventListener("input", applyFilters);
+      document.getElementById("filterSentiment").addEventListener("change", applyFilters);
+      document.getElementById("filterFlag").addEventListener("change", applyFilters);
+      document.getElementById("filterDevice").addEventListener("change", applyFilters);
+      document.getElementById("filterModule").addEventListener("change", applyFilters);
+    }
+
+    function resetFilters() {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("filterSentiment").value = "ALL";
+      document.getElementById("filterFlag").value = "ALL";
+      document.getElementById("filterDevice").value = "ALL";
+      document.getElementById("filterModule").value = "ALL";
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const sent = document.getElementById("filterSentiment").value;
+      const flag = document.getElementById("filterFlag").value;
+      const dev = document.getElementById("filterDevice").value;
+      const mod = document.getElementById("filterModule").value;
+
+      filteredData = dataset.filter(item => {
+        const matchesSearch = item.comment.toLowerCase().includes(search) ||
+                              item.user.toLowerCase().includes(search) ||
+                              item.location.toLowerCase().includes(search);
+        
+        const matchesSent = sent === "ALL" || item.sentiment === sent;
+        const matchesFlag = flag === "ALL" || item.flag === flag;
+        const matchesDev = dev === "ALL" || item.device === dev;
+        const matchesMod = mod === "ALL" || item.module === mod;
+
+        return matchesSearch && matchesSent && matchesFlag && matchesDev && matchesMod;
+      });
+
+      currentPage = 1;
+      updateKPIs();
+      renderCharts();
+      renderFlagSystem();
+      renderTopLiked();
+      renderTable();
+    }
+
+    // KPI UPDATES
+    function updateKPIs() {
+      const total = filteredData.length;
+      const pos = filteredData.filter(d => d.sentiment === "Positivo").length;
+      const neu = filteredData.filter(d => d.sentiment === "Consulta").length;
+      const negRed = filteredData.filter(d => d.flag === "Rojo").length;
+
+      const posPct = total > 0 ? ((pos / total) * 100).toFixed(1) : 0;
+      const neuPct = total > 0 ? ((neu / total) * 100).toFixed(1) : 0;
+
+      const avgCSAT = total > 0 ? (filteredData.reduce((acc, d) => acc + d.csat, 0) / total).toFixed(1) : "0.0";
+
+      document.getElementById("kpi-total").textContent = total;
+      document.getElementById("kpi-positivo").textContent = `${pos} (${posPct}%)`;
+      document.getElementById("kpi-neutro").textContent = `${neu} (${neuPct}%)`;
+      document.getElementById("kpi-rojo").textContent = negRed;
+      document.getElementById("kpi-csat").textContent = `${avgCSAT} / 5.0`;
+    }
+
+    // RENDER CHARTS
+    function renderCharts() {
+      // 1. Sentiment Chart
+      const posCount = filteredData.filter(d => d.sentiment === "Positivo").length;
+      const neuCount = filteredData.filter(d => d.sentiment === "Consulta").length;
+      const negCount = filteredData.filter(d => d.sentiment === "Negativo").length;
+
+      const ctxSent = document.getElementById('sentimentChart').getContext('2d');
+      if (sentimentChartInstance) sentimentChartInstance.destroy();
+      
+      sentimentChartInstance = new Chart(ctxSent, {
+        type: 'doughnut',
+        data: {
+          labels: ['Positivo', 'Consulta/Neutro', 'Negativo'],
+          datasets: [{
+            data: [posCount, neuCount, negCount],
+            backgroundColor: ['#10b981', '#64748b', '#ef4444'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 11 } } }
+          },
+          cutout: '65%'
+        }
+      });
+
+      // 2. Device Chart
+      const devCounts = {
+        'iOS': filteredData.filter(d => d.device === 'iOS').length,
+        'Android': filteredData.filter(d => d.device === 'Android').length,
+        'Web / Desktop': filteredData.filter(d => d.device === 'Web / Desktop').length,
+        'iPad / Tablet': filteredData.filter(d => d.device === 'iPad / Tablet').length,
+      };
+
+      const ctxDev = document.getElementById('deviceChart').getContext('2d');
+      if (deviceChartInstance) deviceChartInstance.destroy();
+
+      deviceChartInstance = new Chart(ctxDev, {
+        type: 'bar',
+        data: {
+          labels: ['iOS', 'Android', 'Web', 'Tablet'],
+          datasets: [{
+            label: 'Comentarios',
+            data: [devCounts['iOS'], devCounts['Android'], devCounts['Web / Desktop'], devCounts['iPad / Tablet']],
+            backgroundColor: '#2563eb',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+
+      // 3. Module Chart
+      const modLabels = ["Mód 1", "Mód 2", "Mód 3", "Mód 4", "Mód 5", "Software"];
+      const modAvgCSAT = modules.map(m => {
+        const sub = filteredData.filter(d => d.module === m);
+        if (sub.length === 0) return 0;
+        return (sub.reduce((a, b) => a + b.csat, 0) / sub.length).toFixed(1);
+      });
+
+      const ctxMod = document.getElementById('moduleChart').getContext('2d');
+      if (moduleChartInstance) moduleChartInstance.destroy();
+
+      moduleChartInstance = new Chart(ctxMod, {
+        type: 'bar',
+        data: {
+          labels: modLabels,
+          datasets: [{
+            label: 'Promedio CSAT',
+            data: modAvgCSAT,
+            backgroundColor: '#f59e0b',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { max: 5, beginAtZero: true } }
+        }
+      });
+    }
+
+    // RENDER FLAG SYSTEM
+    function renderFlagSystem() {
+      const container = document.getElementById("flagListContainer");
+      container.innerHTML = "";
+
+      const negativeItems = filteredData.filter(d => d.sentiment === "Negativo");
+
+      if (negativeItems.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-8">No se encontraron comentarios negativos con los filtros actuales.</p>`;
+        return;
+      }
+
+      // Sort by Flag Priority: Rojo -> Naranja -> Amarillo
+      const flagOrder = { "Rojo": 1, "Naranja": 2, "Amarillo": 3 };
+      negativeItems.sort((a, b) => flagOrder[a.flag] - flagOrder[b.flag]);
+
+      negativeItems.forEach(item => {
+        let badgeColor = "bg-yellow-100 text-yellow-800 border-yellow-300";
+        let icon = "🟡";
+        if (item.flag === "Rojo") {
+          badgeColor = "bg-red-100 text-red-800 border-red-300";
+          icon = "🔴";
+        } else if (item.flag === "Naranja") {
+          badgeColor = "bg-orange-100 text-orange-800 border-orange-300";
+          icon = "🟠";
+        }
+
+        const div = document.createElement("div");
+        div.className = "p-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-sm transition-all text-xs flex flex-col gap-1.5 cursor-pointer";
+        div.onclick = () => openModal(item);
+
+        div.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-900">${item.user}</span>
+              <span class="text-[10px] text-slate-400">${item.timestamp}</span>
+            </div>
+            <span class="px-2 py-0.5 rounded border text-[10px] font-semibold ${badgeColor}">
+              ${icon} Prioridad ${item.flag}
+            </span>
+          </div>
+          <p class="text-slate-700 italic">"${item.comment}"</p>
+          <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+            <span><i class="fa-solid fa-cube text-slate-400"></i> ${item.module}</span>
+            <span><i class="fa-solid fa-mobile-screen"></i> ${item.device}</span>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // RENDER TOP 10 LIKED
+    function renderTopLiked() {
+      const container = document.getElementById("topLikedContainer");
+      container.innerHTML = "";
+
+      const sortedByLikes = [...filteredData].sort((a, b) => b.likes - a.likes).slice(0, 10);
+
+      if (sortedByLikes.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-8">No hay registros disponibles.</p>`;
+        return;
+      }
+
+      sortedByLikes.forEach((item, index) => {
+        let badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+        if (item.sentiment === "Negativo") badgeClass = "bg-red-50 text-red-700 border-red-200";
+        else if (item.sentiment === "Consulta") badgeClass = "bg-slate-100 text-slate-700 border-slate-200";
+
+        const div = document.createElement("div");
+        div.className = "p-2.5 rounded-lg border border-slate-200 bg-white hover:border-slate-300 transition-all text-xs flex items-center justify-between gap-3 cursor-pointer";
+        div.onclick = () => openModal(item);
+
+        div.innerHTML = `
+          <div class="flex items-center gap-2.5 overflow-hidden">
+            <span class="w-5 h-5 rounded-full bg-slate-100 font-bold text-slate-600 flex items-center justify-center text-[10px] flex-shrink-0">
+              #${index + 1}
+            </span>
+            <div class="truncate">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800">${item.user}</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded border ${badgeClass}">${item.sentiment}</span>
+              </div>
+              <p class="text-slate-600 truncate text-[11px]">${item.comment}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 bg-rose-50 text-rose-600 px-2 py-1 rounded-full text-[11px] font-bold flex-shrink-0">
+            <i class="fa-solid fa-heart text-[10px]"></i> ${item.likes}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // RENDER MAIN TABLE
+    function renderTable() {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+
+      document.getElementById("recordCount").textContent = filteredData.length;
+
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const pageData = filteredData.slice(start, end);
+
+      if (pageData.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-8 text-slate-400">No hay comentarios que coincidan con los criterios de búsqueda.</td>
+          </tr>
+        `;
+        updatePaginationControls(0);
+        return;
+      }
+
+      pageData.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50/80 transition-colors border-b border-slate-100";
+
+        let sentTag = `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded">Positivo</span>`;
+        if (item.sentiment === "Negativo") {
+          sentTag = `<span class="bg-red-100 text-red-800 text-[10px] font-semibold px-2 py-0.5 rounded">Negativo</span>`;
+        } else if (item.sentiment === "Consulta") {
+          sentTag = `<span class="bg-slate-200 text-slate-800 text-[10px] font-semibold px-2 py-0.5 rounded">Consulta</span>`;
+        }
+
+        let flagTag = `<span class="text-slate-400 text-[10px]">--</span>`;
+        if (item.flag === "Rojo") flagTag = `<span class="text-red-600 font-bold text-[10px]">🔴 Alta</span>`;
+        else if (item.flag === "Naranja") flagTag = `<span class="text-orange-600 font-bold text-[10px]">🟠 Media</span>`;
+        else if (item.flag === "Amarillo") flagTag = `<span class="text-amber-600 font-bold text-[10px]">🟡 Baja</span>`;
+
+        tr.innerHTML = `
+          <td class="py-3 px-4">
+            <div class="font-mono text-[10px] text-slate-400">${item.id}</div>
+            <div class="text-[11px] text-slate-600 font-medium">${item.timestamp}</div>
+          </td>
+          <td class="py-3 px-4 font-semibold text-slate-900">${item.user}</td>
+          <td class="py-3 px-4 max-w-xs truncate text-slate-700" title="${item.comment}">${item.comment}</td>
+          <td class="py-3 px-4 text-center">
+            <div class="flex flex-col items-center gap-0.5">
+              ${sentTag}
+              ${flagTag}
+            </div>
+          </td>
+          <td class="py-3 px-4 text-center text-slate-600">${item.device}</td>
+          <td class="py-3 px-4 text-center font-medium">
+            <span class="text-rose-600 mr-2"><i class="fa-solid fa-heart"></i> ${item.likes}</span>
+            <span class="text-blue-600"><i class="fa-solid fa-reply"></i> ${item.replies}</span>
+          </td>
+          <td class="py-3 px-4 text-right">
+            <button onclick='openModalDirect(${JSON.stringify(item)})' class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded text-[11px] font-medium transition-colors">
+              Ver
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      updatePaginationControls(filteredData.length);
+    }
+
+    // PAGINATION CONTROLS
+    function updatePaginationControls(totalItems) {
+      const totalPages = Math.ceil(totalItems / pageSize) || 1;
+      const container = document.getElementById("paginationControls");
+      const info = document.getElementById("paginationInfo");
+
+      const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const end = Math.min(currentPage * pageSize, totalItems);
+      info.textContent = `Mostrando ${start} a ${end} de ${totalItems} registros`;
+
+      container.innerHTML = "";
+
+      // Prev Button
+      const prevBtn = document.createElement("button");
+      prevBtn.className = `px-2.5 py-1 rounded border text-xs ${currentPage === 1 ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white hover:bg-slate-50 text-slate-700'}`;
+      prevBtn.innerHTML = `<i class="fa-solid fa-chevron-left"></i>`;
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderTable(); } };
+      container.appendChild(prevBtn);
+
+      // Page Number Indicator
+      const pageIndicator = document.createElement("span");
+      pageIndicator.className = "px-3 py-1 font-semibold text-slate-700";
+      pageIndicator.textContent = `${currentPage} / ${totalPages}`;
+      container.appendChild(pageIndicator);
+
+      // Next Button
+      const nextBtn = document.createElement("button");
+      nextBtn.className = `px-2.5 py-1 rounded border text-xs ${currentPage === totalPages || totalPages === 0 ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white hover:bg-slate-50 text-slate-700'}`;
+      nextBtn.innerHTML = `<i class="fa-solid fa-chevron-right"></i>`;
+      nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+      nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderTable(); } };
+      container.appendChild(nextBtn);
+    }
+
+    // MODAL
+    function openModal(item) {
+      document.getElementById("modalId").textContent = item.id;
+      document.getElementById("modalUser").textContent = item.user;
+      document.getElementById("modalComment").textContent = `"${item.comment}"`;
+      document.getElementById("modalDate").textContent = item.timestamp;
+      document.getElementById("modalSentiment").textContent = item.sentiment;
+      document.getElementById("modalFlag").textContent = item.flag !== "Ninguna" ? `Prioridad ${item.flag}` : "N/A";
+      document.getElementById("modalDevice").textContent = item.device;
+      document.getElementById("modalMetrics").textContent = `${item.likes} Likes / ${item.replies} Respuestas`;
+      document.getElementById("modalCSAT").textContent = `${item.csat} / 5`;
+      document.getElementById("modalModule").textContent = item.module;
+      document.getElementById("modalLocation").textContent = item.location;
+
+      document.getElementById("detailModal").classList.remove("hidden");
+      document.getElementById("detailModal").classList.add("flex");
+    }
+
+    function openModalDirect(item) {
+      openModal(item);
+    }
+
+    function closeModal() {
+      document.getElementById("detailModal").classList.add("hidden");
+      document.getElementById("detailModal").classList.remove("flex");
+    }
+
+    // EXPORT CSV FUNCTIONALITY
+    function exportCSV() {
+      if (filteredData.length === 0) {
+        alert("No hay datos para exportar con los filtros actuales.");
+        return;
+      }
+
+      let csv = "ID_Comentario,Marca_de_Tiempo,Usuario,Comentario,Sentimiento,Prioridad_Bandera,Likes,Respuestas,Dispositivo,Modulo,CSAT,Ubicacion\n";
+      
+      filteredData.forEach(r => {
+        const cleanComment = `"${r.comment.replace(/"/g, '""')}"`;
+        csv += `${r.id},${r.timestamp},${r.user},${cleanComment},${r.sentiment},${r.flag},${r.likes},${r.replies},${r.device},"${r.module}",${r.csat},"${r.location}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Analitica_GlobalLearningHub_Puebla_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
